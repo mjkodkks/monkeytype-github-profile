@@ -24,7 +24,7 @@ app.use(async (ctx, next) => {
 const router = new Router();
 router
   .get("/", (context) => {
-    context.response.body = "Hello world!";
+    context.response.body = "Server is up!";
   })
   .get("/scapy/:userid", async (context) => {
     try {
@@ -34,11 +34,11 @@ router
       if(!userId) return
       console.log('try scapy')
       const browser = await puppeteer.launch({
-        headless: false,
-        slowMo: 250, // slow down by 250ms
+        headless: true,
+        slowMo: 0, 
       });
       const page = await browser.newPage();
-      await page.goto(`${baseUrl}/${userId}`);
+      await page.goto(`${baseUrl}/${userId}`, {waitUntil: 'networkidle2'});
       // accept the cookie popup
       // const element = await page.waitForSelector('#cookiePopup .acceptAll');
       // await element.click();
@@ -51,7 +51,7 @@ router
       const bestwpm = Array.isArray(wpms) && wpms.length > 0 ? Math.max(...wpms) : null
       console.log(wpms)
       console.log(bestwpm)
-      context.response.body = `<h1>Best WPM: ${bestwpm}</h1>`
+      context.response.body = `<h1>User: ${name}</h1><h2>Best WPM: ${bestwpm}</h2>`
       context.response.type = 'text/html';
       await browser.close();
     } catch(error) {
