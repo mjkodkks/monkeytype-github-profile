@@ -1,5 +1,16 @@
 {
   "version": "3",
+  "packages": {
+    "specifiers": {
+      "npm:html-to-image": "npm:html-to-image@1.11.11"
+    },
+    "npm": {
+      "html-to-image@1.11.11": {
+        "integrity": "sha512-9gux8QhvjRO/erSnDPv28noDZcPZmYE7e1vFsBLKLlRlKDSqNJYebj6Qz1TGd5lsRV+X+xYyjCKjuZdABinWjA==",
+        "dependencies": {}
+      }
+    }
+  },
   "redirects": {
     "https://deno.land/x/deno_dom/deno-dom-wasm.ts": "https://deno.land/x/deno_dom@v0.1.43/deno-dom-wasm.ts",
     "https://deno.land/x/oak/mod.ts": "https://deno.land/x/oak@v12.1.0/mod.ts"

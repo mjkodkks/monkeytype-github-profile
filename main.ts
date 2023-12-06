@@ -1,8 +1,9 @@
 import { Application, Router } from "https://deno.land/x/oak@v12.1.0/mod.ts";
 import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
+import monkeyTypeLogo from './utils/monkeyTypeIconBase64.ts'
+import generateBadge from './template/index.ts'
 
 const baseUrl = 'https://monkeytype.com/profile';
-// const url = 'https://google.co.th';
 
 const app = new Application();
 
@@ -39,20 +40,17 @@ router
       });
       const page = await browser.newPage();
       await page.goto(`${baseUrl}/${userId}`, {waitUntil: 'networkidle2'});
-      // accept the cookie popup
-      // const element = await page.waitForSelector('#cookiePopup .acceptAll');
-      // await element.click();
       const name = await page.$eval('#pageProfile .name', (el: any) => el.textContent);
-      console.log(name); 
+      console.info(name); 
       const pbsTime = await page.$$eval('#pageProfile .pbsTime .group .quick .wpm', (el: any) => el.map(m => m.textContent));
       const pbsWords = await page.$$eval('#pageProfile .pbsWords .group .quick .wpm', (el: any) => el.map(m => m.textContent));
-      console.log(pbsTime, pbsWords); 
+      console.info(pbsTime, pbsWords); 
       const wpms = [...pbsTime, ...pbsWords].filter(f => f !== '-')
       const bestwpm = Array.isArray(wpms) && wpms.length > 0 ? Math.max(...wpms) : null
-      console.log(wpms)
-      console.log(bestwpm)
-      context.response.body = `<h1>User: ${name}</h1><h2>Best WPM: ${bestwpm}</h2>`
-      context.response.type = 'text/html';
+      // console.log(wpms)
+      // console.log(bestwpm)
+      context.response.body = generateBadge({ bestwpm, monkeyTypeLogo })
+      context.response.type = `image/svg+xml` ;
       await browser.close();
     } catch(error) {
       console.log(error);
