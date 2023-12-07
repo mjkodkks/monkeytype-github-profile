@@ -4,7 +4,7 @@ import monkeyTypeLogo from './utils/monkeyTypeIconBase64.ts'
 import generateBadge from './template/index.ts'
 
 const baseUrl = 'https://monkeytype.com/profile';
-
+const PORT = Deno.env.get("PORT") || 8000;
 const app = new Application();
 
 // Logger
@@ -37,6 +37,10 @@ router
       const browser = await puppeteer.launch({
         headless: true,
         slowMo: 0, 
+        args: [
+          "--no-sandbox",
+          "--disable-dev-shm-usage",
+        ],
       });
       const page = await browser.newPage();
       await page.goto(`${baseUrl}/${userId}`, {waitUntil: 'networkidle2'});
@@ -59,9 +63,8 @@ router
     }
   });
 
-const PORT = 8000
 app.use(router.routes());
 app.use(router.allowedMethods());
 
 console.info('Listening on http://localhost:' + PORT);
-await app.listen({ port: PORT });
+await app.listen({ port: +PORT });
