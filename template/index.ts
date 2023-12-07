@@ -1,6 +1,6 @@
 
 type Badge = {
-    bestwpm: number | null
+    bestwpm: number
     monkeyTypeLogo: string
 }
 
