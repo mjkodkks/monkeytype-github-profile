@@ -1,7 +1,15 @@
 import { Application, Router } from "https://deno.land/x/oak@v12.1.0/mod.ts";
+import "https://deno.land/std@0.208.0/dotenv/load.ts";
 import monkeyTypeLogo from './utils/monkeyTypeIconBase64.ts'
 import generateBadge from './template/index.ts'
 import { MonkeyTypeResponse } from './types/response.d.ts';
+import { Redis } from "https://esm.sh/@upstash/redis";
+
+const redis = new Redis({
+  url: Deno.env.get("UPSTASH_REDIS_REST_URL"),
+  token: Deno.env.get("UPSTASH_REDIS_REST_TOKEN")
+})
+const MONKEYTYPE = 'monkeytype';
 
 const baseUrl = 'https://api.monkeytype.com';
 const PORT = Deno.env.get("PORT") || 8000;
@@ -33,7 +41,16 @@ router
       context.response.body = `<h1>no user id</h1>`
       context.response.type = 'text/html';
       if (!userId) return
-      console.log('on fetch')
+      const saveKey = `${MONKEYTYPE}-${userId}`
+      // get caching from redis
+      const cachedMaxWpm = await redis.get(saveKey)
+      if (cachedMaxWpm) {
+        console.info('hit cache : ', userId, cachedMaxWpm) 
+        context.response.body = generateBadge({ bestwpm: cachedMaxWpm, monkeyTypeLogo })
+        context.response.type = `image/svg+xml`;
+        return
+      }
+
       const fullUrl = `${baseUrl}/users/${userId}/profile`
       const response: MonkeyTypeResponse = await fetch(fullUrl).then(res => res.json())
       const data = response.data
@@ -42,18 +59,19 @@ router
 
       let maxWpm = 0
       if (data) {
-        for (const [timeInterval, entries] of Object.entries(time)) {
-          const wpm = Math.max(...entries.map(m => Math.round(m.wpm)));
-          if (wpm > maxWpm) maxWpm = wpm
-        }
-        for (const [wordCount, entries] of Object.entries(words)) {
-          const wpm = Math.max(...entries.map(m => Math.round(m.wpm)));
-          if (wpm > maxWpm) maxWpm = wpm
+        const entries = [...Object.entries(time), ...Object.entries(words)];
+        for (const [key, value] of entries) {
+          const wpm = Math.max(...value.map(m => Math.round(m.wpm)));
+          if (wpm > maxWpm) maxWpm = wpm;
         }
       }
       console.info(name, maxWpm)
       context.response.body = generateBadge({ bestwpm: maxWpm, monkeyTypeLogo })
       context.response.type = `image/svg+xml`;
+
+      await redis.set(saveKey, maxWpm)
+      await redis.expire(saveKey, maxWpm)
+
     } catch(error) {
       console.log(error);
       context.response.body = `<h1>Error</h1>`
