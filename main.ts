@@ -51,7 +51,7 @@ router
           if (wpm > maxWpm) maxWpm = wpm
         }
       }
-      console.log(name, maxWpm)
+      console.info(name, maxWpm)
       context.response.body = generateBadge({ bestwpm: maxWpm, monkeyTypeLogo })
       context.response.type = `image/svg+xml`;
     } catch(error) {
